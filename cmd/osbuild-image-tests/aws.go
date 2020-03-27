@@ -188,6 +188,7 @@ func withBootedImageInEC2(image string, c *awsCredentials, f func(address string
 	}
 
 	defer func() {
+		log.Print("[instance terminate] started")
 		_, err = e.TerminateInstances(&ec2.TerminateInstancesInput{
 			InstanceIds: []*string{
 				res.Instances[0].InstanceId,
@@ -202,6 +203,7 @@ func withBootedImageInEC2(image string, c *awsCredentials, f func(address string
 		if err != nil {
 			log.Print(err)
 		}
+		log.Print("[instance terminate] finished")
 	}()
 
 	err = e.WaitUntilInstanceRunning(describeInstanceInput)

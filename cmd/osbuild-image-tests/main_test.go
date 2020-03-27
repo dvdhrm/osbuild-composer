@@ -129,6 +129,8 @@ func trySSHOnce(address string, ns *netNS) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	log.Print("[ssh] attempt")
+
 	cmdName := "ssh"
 	cmdArgs := []string{
 		"-p", "22",
@@ -150,15 +152,18 @@ func trySSHOnce(address string, ns *netNS) error {
 	output, err := cmd.Output()
 
 	if ctx.Err() == context.DeadlineExceeded {
+		log.Print("[ssh] timeout")
 		return &timeoutError{}
 	}
 
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
 			if exitError.ExitCode() == 255 {
+				log.Print("[ssh] 255")
 				return &timeoutError{}
 			}
 		} else {
+			log.Print("[ssh] fail")
 			return fmt.Errorf("ssh command failed from unknown reason: %#v", err)
 		}
 	}
@@ -171,6 +176,7 @@ func trySSHOnce(address string, ns *netNS) error {
 		log.Print("ssh test passed, but the system is degraded")
 		return nil
 	case "starting":
+		log.Print("[ssh] starting")
 		return &timeoutError{}
 	default:
 		return fmt.Errorf("ssh test failed, system status is: %s", outputString)
@@ -246,6 +252,7 @@ func testBoot(t *testing.T, imagePath string, bootType string, outputID string) 
 		}
 
 		err = withBootedImageInEC2(imagePath, creds, func(address string) error {
+			log.Printf("address: %s", address)
 			testSSH(t, address, nil)
 			return nil
 		})
