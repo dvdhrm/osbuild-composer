@@ -81,8 +81,10 @@ func withBootedImageInEC2(image string, c *awsCredentials, f func(address string
 	s3Key, err := generateRandomName("osbuild-image-tests-s3-")
 	common.PanicOnError(err)
 
+	log.Print("[image upload] started")
 	_, err = uploader.Upload(image, c.Bucket, s3Key)
 	common.PanicOnError(err)
+	log.Print("[image upload] finished")
 
 	defer func() {
 		_, err := s.DeleteObject(&s3.DeleteObjectInput{
@@ -98,8 +100,10 @@ func withBootedImageInEC2(image string, c *awsCredentials, f func(address string
 	imageName, err := generateRandomName("osbuild-image-tests-image-")
 	common.PanicOnError(err)
 
+	log.Print("[image register] started")
 	_, err = uploader.Register(imageName, c.Bucket, s3Key)
 	common.PanicOnError(err)
+	log.Print("[image register] finished")
 
 	imageDescriptions, err := e.DescribeImages(&ec2.DescribeImagesInput{
 		Filters: []*ec2.Filter{
@@ -166,6 +170,7 @@ func withBootedImageInEC2(image string, c *awsCredentials, f func(address string
 	})
 	common.PanicOnError(err)
 
+	log.Print("[instance run] started")
 	res, err := e.RunInstances(&ec2.RunInstancesInput{
 		MaxCount:         aws.Int64(1),
 		MinCount:         aws.Int64(1),
@@ -201,6 +206,7 @@ func withBootedImageInEC2(image string, c *awsCredentials, f func(address string
 
 	err = e.WaitUntilInstanceRunning(describeInstanceInput)
 	common.PanicOnError(err)
+	log.Print("[instance run] finished")
 
 	out, err := e.DescribeInstances(describeInstanceInput)
 	common.PanicOnError(err)
