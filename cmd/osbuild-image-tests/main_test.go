@@ -238,6 +238,19 @@ func testBoot(t *testing.T, imagePath string, bootType string, outputID string) 
 		})
 		require.NoError(t, err)
 
+	case "aws":
+		creds, err := getAWSCredentialsFromEnv()
+		require.NoError(t, err)
+		if creds == nil {
+			t.Skip("no AWS credentials given, skipping the test")
+		}
+
+		err = withBootedImageInEC2(imagePath, creds, func(address string) error {
+			testSSH(t, address, nil)
+			return nil
+		})
+		require.NoError(t, err)
+
 	default:
 		panic("unknown boot type!")
 	}
